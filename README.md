@@ -1,5 +1,7 @@
 # Riemann client (Golang)
 
+Monitor all the things.
+
 ## Introduction
 
 Go client library for [Riemann](https://github.com/aphyr/riemann).
