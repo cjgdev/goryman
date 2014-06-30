@@ -1,8 +1,10 @@
-## Riemann client (Golang)
+# Riemann client (Golang)
 
 ## Introduction
 
 Go client library for [Riemann](https://github.com/aphyr/riemann).
+
+This client library was inspired by [Raidman](https://github.com/amir/raidman), and [Riemann NodeJS Client](https://github.com/perezd/riemann-nodejs-client).
 
 ## Installation
 
