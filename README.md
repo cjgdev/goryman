@@ -69,7 +69,7 @@ if err != nil {
 
 You can also query events:
 
-```
+```go
 events, err := c.QueryEvents("host = \"goryman\"")
 if err != nil {
     panic(err)
