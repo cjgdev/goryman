@@ -27,17 +27,17 @@ import (
 Next we'll need to establish a new client:
 
 ```go
-    c := goryman.NewGorymanClient("localhost:5555")
-    err := c.Connect()
-    if err != nil {
-        panic(err)
-    }
+c := goryman.NewGorymanClient("localhost:5555")
+err := c.Connect()
+if err != nil {
+    panic(err)
+}
 ```
 
 Don't forget to close the client connection when you're done:
 
 ```go
-    defer c.Close()
+defer c.Close()
 ```
 
 Just like the Riemann Ruby client, the client sends small events over UDP by default. TCP is used for queries, and large events. There is no acknowledgement of UDP packets, but they are roughly an order of magnitude faster than TCP. We assume both TCP and UDP are listening on the same port.
@@ -45,36 +45,35 @@ Just like the Riemann Ruby client, the client sends small events over UDP by def
 Sending events is easy ([list of valid event properties](http://aphyr.github.com/riemann/concepts.html)):
 
 ```go
-    var event = &goryman.Event{
-        Service: "moargore",
-        Metric:  100,
-        Tags: ["nonblocking"]
-    }
+var event = &goryman.Event{
+    Service: "moargore",
+    Metric:  100,
+    Tags: ["nonblocking"]
+}
 
-    // send event using default method
-    err = c.SendEvent(event)
-    if err != nil {
-        panic(err)
-    }
+// send event using default method
+err = c.SendEvent(event)
+if err != nil {
+    panic(err)
+}
 ```
 
 If you want to send a message over TCP, you can specify the transport explicitly:
 
 ```go
-    // send state using tcp
-    err = c.SendEventTransport(event, "tcp")
-    if err != nil {
-        panic(err)
-    }
+err = c.SendEventTransport(event, "tcp")
+if err != nil {
+    panic(err)
+}
 ```
 
 You can also query events:
 
 ```
-    events, err := c.QueryEvents("host = \"goryman\"")
-    if err != nil {
-        panic(err)
-    }
+events, err := c.QueryEvents("host = \"goryman\"")
+if err != nil {
+    panic(err)
+}
 ```
 
 The Hostname and Time in events will automatically be replaced with the hostname of the server and the current time if none is specified.
