@@ -61,7 +61,7 @@ Sending events is easy ([list of valid event properties](http://aphyr.github.com
 err = c.SendEvent(&goryman.Event{
     Service: "moargore",
     Metric:  100,
-    Tags: ["nonblocking"],
+    Tags: []string{"nonblocking"},
 })
 if err != nil {
     panic(err)
@@ -78,6 +78,10 @@ if err != nil {
 ```
 
 The Hostname and Time in events will automatically be replaced with the hostname of the server and the current time if none is specified.
+
+## Integrations
+
+Martini: [GoryMartini](http://github.com/bigdatadev/gorymartini)
 
 ## Contributing
 
