@@ -1,3 +1,7 @@
+// A Riemann client for Go, featuring concurrency, sending events and state updates, queries,
+// and feature parity with the reference implementation written in Ruby.
+//
+// Copyright (C) 2014 by Christopher Gilbert <christopher.john.gilbert@gmail.com>
 package goryman
 
 import (
@@ -10,6 +14,7 @@ import (
 	"github.com/bigdatadev/goryman/proto"
 )
 
+// EventToProtocolBuffer converts an Event type to a proto.Event
 func EventToProtocolBuffer(event *Event) (*proto.Event, error) {
 	if event.Host == "" {
 		event.Host, _ = os.Hostname()
@@ -72,6 +77,7 @@ func EventToProtocolBuffer(event *Event) (*proto.Event, error) {
 	return &e, nil
 }
 
+// StateToProtocolBuffer converts a State type to a proto.State
 func StateToProtocolBuffer(state *State) (*proto.State, error) {
 	if state.Host == "" {
 		state.Host, _ = os.Hostname()
@@ -137,6 +143,7 @@ func StateToProtocolBuffer(state *State) (*proto.State, error) {
 	return &e, nil
 }
 
+// ProtocolBuffersToEvents converts an array of proto.Event to an array of Event
 func ProtocolBuffersToEvents(pbEvents []*proto.Event) []Event {
 	var events []Event
 	for _, event := range pbEvents {

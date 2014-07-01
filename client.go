@@ -1,3 +1,7 @@
+// A Riemann client for Go, featuring concurrency, sending events and state updates, queries,
+// and feature parity with the reference implementation written in Ruby.
+//
+// Copyright (C) 2014 by Christopher Gilbert <christopher.john.gilbert@gmail.com>
 package goryman
 
 import (
@@ -8,18 +12,21 @@ import (
 	"github.com/bigdatadev/goryman/proto"
 )
 
+// GorymanClient is a client library to send events to Riemann
 type GorymanClient struct {
 	udp  *UdpTransport
 	tcp  *TcpTransport
 	addr string
 }
 
+// NewGorymanClient - Factory
 func NewGorymanClient(addr string) *GorymanClient {
 	return &GorymanClient{
 		addr: addr,
 	}
 }
 
+// Connect creates a UDP and TCP connection to a Riemann server
 func (c *GorymanClient) Connect() error {
 	udp, err := net.DialTimeout("udp", c.addr, time.Second*5)
 	if err != nil {
@@ -34,6 +41,7 @@ func (c *GorymanClient) Connect() error {
 	return nil
 }
 
+// Close the connection to Riemann
 func (c *GorymanClient) Close() error {
 	if nil == c.udp && nil == c.tcp {
 		return nil
@@ -45,6 +53,7 @@ func (c *GorymanClient) Close() error {
 	return c.tcp.Close()
 }
 
+// Send an event
 func (c *GorymanClient) SendEvent(e *Event) error {
 	epb, err := EventToProtocolBuffer(e)
 	if err != nil {
@@ -58,6 +67,7 @@ func (c *GorymanClient) SendEvent(e *Event) error {
 	return err
 }
 
+// Send a state update
 func (c *GorymanClient) SendState(s *State) error {
 	spb, err := StateToProtocolBuffer(s)
 	if err != nil {
@@ -71,6 +81,7 @@ func (c *GorymanClient) SendState(s *State) error {
 	return err
 }
 
+// Query the server for events
 func (c *GorymanClient) QueryEvents(q string) ([]Event, error) {
 	query := &proto.Query{}
 	query.String_ = pb.String(q)
@@ -86,10 +97,12 @@ func (c *GorymanClient) QueryEvents(q string) ([]Event, error) {
 	return ProtocolBuffersToEvents(response.GetEvents()), nil
 }
 
+// Send and receive data from Riemann
 func (c *GorymanClient) sendRecv(m *proto.Msg) (*proto.Msg, error) {
 	return c.tcp.SendRecv(m)
 }
 
+// Send and maybe receive data from Riemann
 func (c *GorymanClient) sendMaybeRecv(m *proto.Msg) (*proto.Msg, error) {
 	_, err := c.udp.SendMaybeRecv(m)
 	if err != nil {

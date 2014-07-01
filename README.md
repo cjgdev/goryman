@@ -1,6 +1,6 @@
 # Riemann client (Golang)
 
-Monitor all the things.
+[![GoDoc](https://godoc.org/github.com/bigdatadev/goryman?status.png)](http://godoc.org/github.com/bigdatadev/goryman)
 
 ## Introduction
 
@@ -8,9 +8,20 @@ Go client library for [Riemann](https://github.com/aphyr/riemann).
 
 This client library was inspired by [Raidman](https://github.com/amir/raidman), and [Riemann NodeJS Client](https://github.com/perezd/riemann-nodejs-client).
 
+Features:
+* Idiomatic concurrency
+* Sending events, state updates, queries.
+* Feature parity with the reference implementation written in Ruby.
+
 ## Installation
 
-Riemann uses [Google Protocol Buffers](http://code.google.com/p/protobuf/), so make sure that's installed and available on your PATH.
+To install the package for use in your own programs:
+
+```
+go get github.com/bigdatadev/goryman
+```
+
+If you're a developer, Riemann uses [Google Protocol Buffers](http://code.google.com/p/protobuf/), so make sure that's installed and available on your PATH.
 
 ```
 go get code.google.com/p/goprotobuf/{proto,protoc-gen-go}
@@ -47,13 +58,11 @@ Just like the Riemann Ruby client, the client sends small events over UDP by def
 Sending events is easy ([list of valid event properties](http://aphyr.github.com/riemann/concepts.html)):
 
 ```go
-var event = &goryman.Event{
+err = c.SendEvent(&goryman.Event{
     Service: "moargore",
     Metric:  100,
-    Tags: ["nonblocking"]
-}
-
-err = c.SendEvent(event)
+    Tags: ["nonblocking"],
+})
 if err != nil {
     panic(err)
 }

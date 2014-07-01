@@ -1,3 +1,7 @@
+// A Riemann client for Go, featuring concurrency, sending events and state updates, queries,
+// and feature parity with the reference implementation written in Ruby.
+//
+// Copyright (C) 2014 by Christopher Gilbert <christopher.john.gilbert@gmail.com>
 package goryman
 
 import (
@@ -12,33 +16,40 @@ import (
 	"github.com/bigdatadev/goryman/proto"
 )
 
+// Transport is an interface to a generic transport used by the client
 type Transport interface {
 	SendRecv(message *proto.Msg) (*proto.Msg, error)
 	SendMaybeRecv(message *proto.Msg) (*proto.Msg, error)
 }
 
+// TcpTransport is a type that implements the Transport interface
 type TcpTransport struct {
 	conn         net.Conn
 	requestQueue chan request
 }
 
+// UdpTransport is a type that implements the Transport interface
 type UdpTransport struct {
 	conn         net.Conn
 	requestQueue chan request
 }
 
+// request encapsulates a request to send to the Riemann server
 type request struct {
 	message     *proto.Msg
 	response_ch chan response
 }
 
+// response encapsulates a response from the Riemann server
 type response struct {
 	message *proto.Msg
 	err     error
 }
 
+// MAX_UDP_SIZE is the maximum allowed size of a UDP packet before automatically failing the send
 const MAX_UDP_SIZE = 16384
 
+// NewTcpTransport - Factory
 func NewTcpTransport(conn net.Conn) *TcpTransport {
 	t := &TcpTransport{
 		conn:         conn,
@@ -48,6 +59,7 @@ func NewTcpTransport(conn net.Conn) *TcpTransport {
 	return t
 }
 
+// NewUdpTransport - Factory
 func NewUdpTransport(conn net.Conn) *UdpTransport {
 	t := &UdpTransport{
 		conn:         conn,
@@ -57,6 +69,7 @@ func NewUdpTransport(conn net.Conn) *UdpTransport {
 	return t
 }
 
+// TcpTransport implementation of SendRecv, queues a request to send a message to the server
 func (t *TcpTransport) SendRecv(message *proto.Msg) (*proto.Msg, error) {
 	response_ch := make(chan response)
 	t.requestQueue <- request{message, response_ch}
@@ -64,10 +77,12 @@ func (t *TcpTransport) SendRecv(message *proto.Msg) (*proto.Msg, error) {
 	return r.message, r.err
 }
 
+// TcpTransport implementation of SendMaybeRecv, queues a request to send a message to the server
 func (t *TcpTransport) SendMaybeRecv(message *proto.Msg) (*proto.Msg, error) {
 	return t.SendRecv(message)
 }
 
+// Close will close the TcpTransport
 func (t *TcpTransport) Close() error {
 	close(t.requestQueue)
 	err := t.conn.Close()
@@ -77,6 +92,7 @@ func (t *TcpTransport) Close() error {
 	return nil
 }
 
+// runRequestQueue services the TcpTransport request queue
 func (t *TcpTransport) runRequestQueue() {
 	for req := range t.requestQueue {
 		message := req.message
@@ -88,6 +104,7 @@ func (t *TcpTransport) runRequestQueue() {
 	}
 }
 
+// execRequest will send a TCP message to Riemann
 func (t *TcpTransport) execRequest(message *proto.Msg) (*proto.Msg, error) {
 	msg := &proto.Msg{}
 	data, err := pb.Marshal(message)
@@ -121,10 +138,12 @@ func (t *TcpTransport) execRequest(message *proto.Msg) (*proto.Msg, error) {
 	return msg, nil
 }
 
+// UdpTransport implementation of SendRecv, will automatically fail if called
 func (t *UdpTransport) SendRecv(message *proto.Msg) (*proto.Msg, error) {
 	return nil, fmt.Errorf("udp doesn't support receiving acknowledgements")
 }
 
+// UdpTransport implementation of SendMaybeRecv, queues a request to send a message to the server
 func (t *UdpTransport) SendMaybeRecv(message *proto.Msg) (*proto.Msg, error) {
 	response_ch := make(chan response)
 	t.requestQueue <- request{message, response_ch}
@@ -132,6 +151,7 @@ func (t *UdpTransport) SendMaybeRecv(message *proto.Msg) (*proto.Msg, error) {
 	return r.message, r.err
 }
 
+// Close will close the UdpTransport
 func (t *UdpTransport) Close() error {
 	close(t.requestQueue)
 	err := t.conn.Close()
@@ -141,6 +161,7 @@ func (t *UdpTransport) Close() error {
 	return nil
 }
 
+// runRequestQueue services the UdpTransport request queue
 func (t *UdpTransport) runRequestQueue() {
 	for req := range t.requestQueue {
 		message := req.message
@@ -152,6 +173,7 @@ func (t *UdpTransport) runRequestQueue() {
 	}
 }
 
+// execRequest will send a UDP message to Riemann
 func (t *UdpTransport) execRequest(message *proto.Msg) (*proto.Msg, error) {
 	data, err := pb.Marshal(message)
 	if err != nil {
@@ -166,6 +188,7 @@ func (t *UdpTransport) execRequest(message *proto.Msg) (*proto.Msg, error) {
 	return nil, nil
 }
 
+// readMessages will read Riemann messages from the TCP connection
 func readMessages(r io.Reader, p []byte) error {
 	for len(p) > 0 {
 		n, err := r.Read(p)
