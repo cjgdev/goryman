@@ -1,10 +1,12 @@
 package goryman
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"time"
 
+	pb "code.google.com/p/goprotobuf/proto"
 	"github.com/bigdatadev/goryman/proto"
 )
 

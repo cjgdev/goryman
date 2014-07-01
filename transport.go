@@ -3,11 +3,13 @@ package goryman
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 
 	pb "code.google.com/p/goprotobuf/proto"
+	"github.com/bigdatadev/goryman/proto"
 )
 
 type Transport interface {
@@ -40,16 +42,16 @@ const MAX_UDP_SIZE = 16384
 func NewTcpTransport(conn net.Conn) *TcpTransport {
 	t := &TcpTransport{
 		conn:         conn,
-		messageQueue: make(chan request),
+		requestQueue: make(chan request),
 	}
 	go t.runRequestQueue()
 	return t
 }
 
 func NewUdpTransport(conn net.Conn) *UdpTransport {
-	t := &TcpTransport{
+	t := &UdpTransport{
 		conn:         conn,
-		messageQueue: make(chan request),
+		requestQueue: make(chan request),
 	}
 	go t.runRequestQueue()
 	return t
@@ -57,7 +59,7 @@ func NewUdpTransport(conn net.Conn) *UdpTransport {
 
 func (t *TcpTransport) SendRecv(message *proto.Msg) (*proto.Msg, error) {
 	response_ch := make(chan response)
-	requestQueue <- request{message, response_ch}
+	t.requestQueue <- request{message, response_ch}
 	r := <-response_ch
 	return r.message, r.err
 }
@@ -125,7 +127,7 @@ func (t *UdpTransport) SendRecv(message *proto.Msg) (*proto.Msg, error) {
 
 func (t *UdpTransport) SendMaybeRecv(message *proto.Msg) (*proto.Msg, error) {
 	response_ch := make(chan response)
-	requestQueue <- request{message, response_ch}
+	t.requestQueue <- request{message, response_ch}
 	r := <-response_ch
 	return r.message, r.err
 }
@@ -158,7 +160,7 @@ func (t *UdpTransport) execRequest(message *proto.Msg) (*proto.Msg, error) {
 	if len(data) > MAX_UDP_SIZE {
 		return nil, fmt.Errorf("unable to send message, too large for udp")
 	}
-	if _, err = conn.Write(data); err != nil {
+	if _, err = t.conn.Write(data); err != nil {
 		return nil, err
 	}
 	return nil, nil

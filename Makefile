@@ -1,17 +1,17 @@
 all:    install
 
 install:
-        go install
-        go install ./proto
+	go install
+	go install ./proto
 
 test:
-        go test
+	go test
 
 clean:
-        go clean ./...
+	go clean ./...
 
 nuke:
-        go clean -i ./...
+	go clean -i ./...
 
 regenerate:
-        make -C proto regenerate
+	make -C proto regenerate

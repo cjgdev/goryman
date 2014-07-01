@@ -1,15 +1,16 @@
 package goryman
 
 import (
-	"fmt"
 	"net"
+	"time"
 
+	pb "code.google.com/p/goprotobuf/proto"
 	"github.com/bigdatadev/goryman/proto"
 )
 
 type GorymanClient struct {
-	udp  UdpTransport
-	tcp  TcpTransport
+	udp  *UdpTransport
+	tcp  *TcpTransport
 	addr string
 }
 
@@ -53,7 +54,8 @@ func (c *GorymanClient) SendEvent(e *Event) error {
 	message := &proto.Msg{}
 	message.Events = append(message.Events, epb)
 
-	return sendMaybeRecv(message)
+	_, err = c.sendMaybeRecv(message)
+	return err
 }
 
 func (c *GorymanClient) SendState(s *State) error {
@@ -65,7 +67,8 @@ func (c *GorymanClient) SendState(s *State) error {
 	message := &proto.Msg{}
 	message.States = append(message.States, spb)
 
-	return sendMaybeRecv(message)
+	_, err = c.sendMaybeRecv(message)
+	return err
 }
 
 func (c *GorymanClient) QueryEvents(q string) ([]Event, error) {
@@ -75,7 +78,7 @@ func (c *GorymanClient) QueryEvents(q string) ([]Event, error) {
 	message := &proto.Msg{}
 	message.Query = query
 
-	response, err := sendRecv(message)
+	response, err := c.sendRecv(message)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +93,7 @@ func (c *GorymanClient) sendRecv(m *proto.Msg) (*proto.Msg, error) {
 func (c *GorymanClient) sendMaybeRecv(m *proto.Msg) (*proto.Msg, error) {
 	_, err := c.udp.SendMaybeRecv(m)
 	if err != nil {
-		c.tcp.SendMaybeRecv(m)
+		return c.tcp.SendMaybeRecv(m)
 	}
+	return nil, nil
 }
