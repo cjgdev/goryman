@@ -3,15 +3,13 @@ package goryman
 import (
 	"fmt"
 	"net"
-	"sync"
 
 	"github.com/bigdatadev/goryman/proto"
 )
 
 type GorymanClient struct {
-	sync.Mutex
-	udp  net.Conn
-	tcp  net.Conn
+	udp  UdpTransport
+	tcp  TcpTransport
 	addr string
 }
 
@@ -22,22 +20,20 @@ func NewGorymanClient(addr string) *GorymanClient {
 }
 
 func (c *GorymanClient) Connect() error {
-	udp, err := net.DialTimeout("udp", c.addr, time.Second)
+	udp, err := net.DialTimeout("udp", c.addr, time.Second*5)
 	if err != nil {
 		return err
 	}
-	tcp, err := net.DialTimeout("tcp", c.addr, time.Second)
+	tcp, err := net.DialTimeout("tcp", c.addr, time.Second*5)
 	if err != nil {
 		return err
 	}
-	c.udp = udp
-	c.tcp = tcp
+	c.udp = NewUdpTransport(udp)
+	c.tcp = NewTcpTransport(tcp)
 	return nil
 }
 
 func (c *GorymanClient) Close() error {
-	c.Lock()
-	defer c.Unlock()
 	if nil == c.udp && nil == c.tcp {
 		return nil
 	}
@@ -49,10 +45,6 @@ func (c *GorymanClient) Close() error {
 }
 
 func (c *GorymanClient) SendEvent(e *Event) error {
-	return SendEventTransport(e, "udp")
-}
-
-func (c *GorymanClient) SendEventTransport(e *Event, t string) error {
 	epb, err := EventToProtocolBuffer(e)
 	if err != nil {
 		return err
@@ -61,14 +53,10 @@ func (c *GorymanClient) SendEventTransport(e *Event, t string) error {
 	message := &proto.Msg{}
 	message.Events = append(message.Events, epb)
 
-	return SendMessageTransport(message, t)
+	return sendMaybeRecv(message)
 }
 
 func (c *GorymanClient) SendState(s *State) error {
-	return SendEventTransport(s, "udp")
-}
-
-func (c *GorymanClient) SendStateTransport(s *State, t string) error {
 	spb, err := StateToProtocolBuffer(s)
 	if err != nil {
 		return err
@@ -77,20 +65,17 @@ func (c *GorymanClient) SendStateTransport(s *State, t string) error {
 	message := &proto.Msg{}
 	message.States = append(message.States, spb)
 
-	return SendMessageTransport(message, t)
+	return sendMaybeRecv(message)
 }
 
 func (c *GorymanClient) QueryEvents(q string) ([]Event, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	query := &proto.Query{}
 	query.String_ = pb.String(q)
 
 	message := &proto.Msg{}
 	message.Query = query
 
-	response, err := SendTcp(message, c.tcp)
+	response, err := sendRecv(message)
 	if err != nil {
 		return nil, err
 	}
@@ -98,25 +83,13 @@ func (c *GorymanClient) QueryEvents(q string) ([]Event, error) {
 	return ProtocolBuffersToEvents(response.GetEvents()), nil
 }
 
-func (c *GorymanClient) SendMessage(m *Message) error {
-	return SendMessageTransport(m, "udp")
+func (c *GorymanClient) sendRecv(m *proto.Msg) (*proto.Msg, error) {
+	return c.tcp.SendRecv(m)
 }
 
-func (c *GorymanClient) SendMessageTransport(m *Message, t string) error {
-	c.Lock()
-	defer c.Unlock()
-
-	switch t {
-	case "udp":
-		_, err := SendUdp(message, c.udp)
-		if err != nil {
-			SendTcp(message, c.tcp)
-		}
-	case "tcp":
-		SendTcp(message, c.tcp)
-	default:
-		return fmt.Errorf("cannot send message, unknown transport")
+func (c *GorymanClient) sendMaybeRecv(m *proto.Msg) (*proto.Msg, error) {
+	_, err := c.udp.SendMaybeRecv(m)
+	if err != nil {
+		c.tcp.SendMaybeRecv(m)
 	}
-
-	return nil
 }

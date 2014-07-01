@@ -53,17 +53,7 @@ var event = &goryman.Event{
     Tags: ["nonblocking"]
 }
 
-// send event using default method
 err = c.SendEvent(event)
-if err != nil {
-    panic(err)
-}
-```
-
-If you want to send a message over TCP, you can specify the transport explicitly:
-
-```go
-err = c.SendEventTransport(event, "tcp")
 if err != nil {
     panic(err)
 }
