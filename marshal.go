@@ -23,7 +23,7 @@ func init() {
 // EventToProtocolBuffer converts an Event type to a proto.Event
 func EventToProtocolBuffer(event *Event) (*proto.Event, error) {
 	if event.Host == "" {
-		event.Host, _ = Hostname
+		event.Host = Hostname
 	}
 	if event.Time == 0 {
 		event.Time = time.Now().Unix()
@@ -86,7 +86,7 @@ func EventToProtocolBuffer(event *Event) (*proto.Event, error) {
 // StateToProtocolBuffer converts a State type to a proto.State
 func StateToProtocolBuffer(state *State) (*proto.State, error) {
 	if state.Host == "" {
-		state.Host, _ = Hostname
+		state.Host = Hostname
 	}
 	if state.Time == 0 {
 		state.Time = time.Now().Unix()
