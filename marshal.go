@@ -10,10 +10,20 @@ import (
 	"github.com/bigdatadev/goryman/proto"
 )
 
+// note Hostname is exported so clients can set it to something different than the default
+var Hostname string
+
+func init() {
+	host, err := os.Hostname()
+	if nil == err {
+		Hostname = host
+	}
+}
+
 // EventToProtocolBuffer converts an Event type to a proto.Event
 func EventToProtocolBuffer(event *Event) (*proto.Event, error) {
 	if event.Host == "" {
-		event.Host, _ = os.Hostname()
+		event.Host = Hostname
 	}
 	if event.Time == 0 {
 		event.Time = time.Now().Unix()
@@ -76,7 +86,7 @@ func EventToProtocolBuffer(event *Event) (*proto.Event, error) {
 // StateToProtocolBuffer converts a State type to a proto.State
 func StateToProtocolBuffer(state *State) (*proto.State, error) {
 	if state.Host == "" {
-		state.Host, _ = os.Hostname()
+		state.Host = Hostname
 	}
 	if state.Time == 0 {
 		state.Time = time.Now().Unix()
