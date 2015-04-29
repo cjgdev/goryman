@@ -21,10 +21,10 @@ To install the package for use in your own programs:
 go get github.com/bigdatadev/goryman
 ```
 
-If you're a developer, Riemann uses [Google Protocol Buffers](http://code.google.com/p/protobuf/), so make sure that's installed and available on your PATH.
+If you're a developer, Riemann uses [Google Protocol Buffers](https://github.com/golang/protobuf), so make sure that's installed and available on your PATH.
 
 ```
-go get code.google.com/p/goprotobuf/{proto,protoc-gen-go}
+go get github.com/golang/protobuf/{proto,protoc-gen-go}
 ```
 
 ## Getting Started

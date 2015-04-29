@@ -8,7 +8,7 @@ import (
 	"io"
 	"net"
 
-	pb "code.google.com/p/goprotobuf/proto"
+	pb "github.com/golang/protobuf/proto"
 	"github.com/bigdatadev/goryman/proto"
 )
 
