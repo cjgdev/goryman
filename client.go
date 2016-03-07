@@ -17,6 +17,7 @@ type GorymanClient struct {
 	udp  *UdpTransport
 	tcp  *TcpTransport
 	addr string
+	forceTcp bool
 }
 
 // NewGorymanClient - Factory
@@ -24,6 +25,10 @@ func NewGorymanClient(addr string) *GorymanClient {
 	return &GorymanClient{
 		addr: addr,
 	}
+}
+
+func (c *GorymanClient) ForceTcp() {
+        c.forceTcp = true
 }
 
 // Connect creates a UDP and TCP connection to a Riemann server
@@ -104,9 +109,12 @@ func (c *GorymanClient) sendRecv(m *proto.Msg) (*proto.Msg, error) {
 
 // Send and maybe receive data from Riemann
 func (c *GorymanClient) sendMaybeRecv(m *proto.Msg) (*proto.Msg, error) {
-	_, err := c.udp.SendMaybeRecv(m)
-	if err != nil {
-		return c.tcp.SendMaybeRecv(m)
-	}
-	return nil, nil
+	if c.forceTcp {
+            	return c.tcp.SendMaybeRecv(m)
+        }
+        _, err := c.udp.SendMaybeRecv(m)
+        if err != nil {
+                return c.tcp.SendMaybeRecv(m)
+        }
+        return nil, nil
 }
