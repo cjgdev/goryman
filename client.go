@@ -8,31 +8,37 @@ import (
 	"net"
 	"time"
 
-	pb "github.com/golang/protobuf/proto"
 	"github.com/bigdatadev/goryman/proto"
+	pb "github.com/golang/protobuf/proto"
 )
 
 // GorymanClient is a client library to send events to Riemann
 type GorymanClient struct {
-	udp  *UdpTransport
-	tcp  *TcpTransport
-	addr string
+	udp     *UdpTransport
+	tcp     *TcpTransport
+	addr    string
+	timeout time.Duration
 }
 
 // NewGorymanClient - Factory
 func NewGorymanClient(addr string) *GorymanClient {
 	return &GorymanClient{
-		addr: addr,
+		addr:    addr,
+		timeout: 5, //Deafult timeout
 	}
+}
+
+func (c *GorymanClient) SetTimeout(t time.Duration) {
+	c.timeout = t
 }
 
 // Connect creates a UDP and TCP connection to a Riemann server
 func (c *GorymanClient) Connect() error {
-	udp, err := net.DialTimeout("udp", c.addr, time.Second*5)
+	udp, err := net.DialTimeout("udp", c.addr, time.Second*c.timeout)
 	if err != nil {
 		return err
 	}
-	tcp, err := net.DialTimeout("tcp", c.addr, time.Second*5)
+	tcp, err := net.DialTimeout("tcp", c.addr, time.Second*c.timeout)
 	if err != nil {
 		return err
 	}
