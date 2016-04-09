@@ -14,17 +14,23 @@ import (
 
 // GorymanClient is a client library to send events to Riemann
 type GorymanClient struct {
-	udp     *UdpTransport
-	tcp     *TcpTransport
-	addr    string
-	timeout time.Duration
+	udp      *UdpTransport
+	tcp      *TcpTransport
+	addr     string
+	forceTcp bool
+	timeout  time.Duration
+}
+
+func (c *GorymanClient) ForceTcp() {
+	c.forceTcp = true
 }
 
 // NewGorymanClient - Factory
 func NewGorymanClient(addr string) *GorymanClient {
 	return &GorymanClient{
-		addr:    addr,
-		timeout: 5, //Deafult timeout
+		addr:     addr,
+		forceTcp: false,
+		timeout:  5, //Deafult timeout
 	}
 }
 
@@ -110,6 +116,9 @@ func (c *GorymanClient) sendRecv(m *proto.Msg) (*proto.Msg, error) {
 
 // Send and maybe receive data from Riemann
 func (c *GorymanClient) sendMaybeRecv(m *proto.Msg) (*proto.Msg, error) {
+	if c.forceTcp {
+		return c.tcp.SendMaybeRecv(m)
+	}
 	_, err := c.udp.SendMaybeRecv(m)
 	if err != nil {
 		return c.tcp.SendMaybeRecv(m)
