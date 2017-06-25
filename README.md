@@ -55,7 +55,7 @@ defer c.Close()
 
 Just like the Riemann Ruby client, the client sends small events over UDP by default. TCP is used for queries, and large events. There is no acknowledgement of UDP packets, but they are roughly an order of magnitude faster than TCP. We assume both TCP and UDP are listening on the same port.
 
-Sending events is easy ([list of valid event properties](http://aphyr.github.com/riemann/concepts.html)):
+Sending events is easy ([list of valid event properties](http://riemann.io/concepts.html)):
 
 ```go
 err = c.SendEvent(&goryman.Event{
